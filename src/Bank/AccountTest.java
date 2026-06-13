@@ -107,6 +107,51 @@ public class AccountTest {
     }
 
     @Test
+    void regularBusinessAccountUsesDefaultRules() {
+        // a non-BMW business account keeps the shared interface defaults:
+        // bonus every 3 months, credit +$100 every 5 months
+        BusinessAccount business = new BusinessAccount("Soldier Boy", 5);
+
+        assertEquals(3, business.bonusPeriod);
+        assertEquals(5, business.monthsRequired);
+        assertEquals(100, business.creditIncrease);
+    }
+
+    @Test
+    void regularBusinessExpandsCreditByOneHundredAfterFiveMonths() {
+        BusinessAccount business = new BusinessAccount("Soldier Boy", 5); // credit = 500
+        business.numMonthsCompounded = 5; // default monthsRequired
+
+        business.expandCredit();
+
+        assertEquals(600, business.credit); // +$100 default increase
+    }
+
+    @Test
+    void bmwGetsLoyaltyBonusAfterTwoMonths() {
+        // BMW's loyalty bonus period is 2 months instead of the default 3
+        BMW bmw = new BMW("Stormfront", 5);
+        bmw.deposit(100);
+
+        bmw.monthlyCompound(); // 100 + 50 = 150, monthsCompounded = 1
+        bmw.monthlyCompound(); // 150 + 75 = 225, then +100 bonus = 325
+
+        assertEquals(325, bmw.getBalance());
+    }
+
+    @Test
+    void bmwReusesBusinessWithdrawLogic() {
+        // BMW inherits the credit-backed withdraw from BusinessAccount
+        BMW bmw = new BMW("Stormfront", 5);
+        bmw.deposit(300);
+
+        bmw.withdraw(700); // 300 from balance, 400 from the 500 credit
+
+        assertEquals(0, bmw.getBalance());
+        assertEquals(100, bmw.credit);
+    }
+
+    @Test
     void savingsCanTransferToAnotherSavingsAccount() {
         SavingsAccount sender = new SavingsAccount("Homelander");
         SavingsAccount receiver = new SavingsAccount("Butcher");

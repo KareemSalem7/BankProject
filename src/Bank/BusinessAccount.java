@@ -8,10 +8,26 @@ public class BusinessAccount extends Account implements CompoundGrowth, CreditEx
     int numMonthsCompounded;
     // business accounts have num months compounded to decide loyalty bonus and credit increases
 
+    // these rules can vary per business account "type" (e.g. BMW), so we keep them
+    // as instance fields instead of always using the shared interface constants
+    int bonusPeriod;
+    int monthsRequired;
+    double creditIncrease;
+
     public BusinessAccount(String cardholderName, int creditScore) {
+        // default business account uses the shared interface constants
+        this(cardholderName, creditScore,
+                CompoundGrowth.bonusPeriod, CreditExtension.monthsRequired, CreditExtension.creditIncrease);
+    }
+
+    public BusinessAccount(String cardholderName, int creditScore,
+                           int bonusPeriod, int monthsRequired, double creditIncrease) {
         super(cardholderName);
         this.credit = creditScore * 100;
         this.numMonthsCompounded = 0;
+        this.bonusPeriod = bonusPeriod;
+        this.monthsRequired = monthsRequired;
+        this.creditIncrease = creditIncrease;
     }
 
     // inheritance:
@@ -50,7 +66,7 @@ public class BusinessAccount extends Account implements CompoundGrowth, CreditEx
 
         // check if the loyalty bonus will be applied
         this.numMonthsCompounded += 1;
-        if (this.numMonthsCompounded >= CompoundGrowth.bonusPeriod){
+        if (this.numMonthsCompounded >= this.bonusPeriod){
             this.increaseBalance(CompoundGrowth.bonus);
             this.numMonthsCompounded = 0;
             System.out.println("Congratulations! Your loyalty has earned you $" + CompoundGrowth.bonus + "!");
@@ -59,11 +75,11 @@ public class BusinessAccount extends Account implements CompoundGrowth, CreditEx
 
     @Override
     public void expandCredit() {
-        if (this.numMonthsCompounded >= CreditExtension.monthsRequired){
-            this.credit += CreditExtension.creditIncrease;
+        if (this.numMonthsCompounded >= this.monthsRequired){
+            this.credit += this.creditIncrease;
             System.out.println("Congratulations! Your credit is now $" + this.credit + "!");
         } else {
-            System.out.println("You still need to wait " + (CreditExtension.monthsRequired - this.numMonthsCompounded) + "months before a credit expansion.");
+            System.out.println("You still need to wait " + (this.monthsRequired - this.numMonthsCompounded) + "months before a credit expansion.");
         }
     }
 }
