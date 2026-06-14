@@ -120,11 +120,60 @@ public class AccountTest {
     @Test
     void regularBusinessExpandsCreditByOneHundredAfterFiveMonths() {
         BusinessAccount business = new BusinessAccount("Soldier Boy", 5); // credit = 500
-        business.numMonthsCompounded = 5; // default monthsRequired
+
+        // compound 5 real months: the 3-month loyalty bonus fires along the way
+        // but must NOT reset the counter, otherwise credit expansion never reaches 5
+        for (int i = 0; i < 5; i++) {
+            business.monthlyCompound();
+        }
 
         business.expandCredit();
 
         assertEquals(600, business.credit); // +$100 default increase
+    }
+
+    @Test
+    void loyaltyBonusAndCreditExpansionRunOnIndependentCycles() {
+        BusinessAccount business = new BusinessAccount("Soldier Boy", 5);
+
+        // 3 months -> loyalty bonus cycle hits, but credit must not expand yet
+        for (int i = 0; i < 3; i++) {
+            business.monthlyCompound();
+        }
+        business.expandCredit();
+        assertEquals(500, business.credit); // unchanged at month 3
+
+        // months 4 and 5 -> now the 5-month credit cycle hits
+        business.monthlyCompound();
+        business.monthlyCompound();
+        business.expandCredit();
+        assertEquals(600, business.credit);
+    }
+
+    @Test
+    void creditExpansionRepeatsEachCycle() {
+        // regression guard: the running counter must keep matching the 5-month
+        // cycle, so credit expands again at month 10, 15, ... not just the first time
+        BusinessAccount business = new BusinessAccount("Soldier Boy", 5); // credit = 500
+
+        for (int i = 0; i < 5; i++) business.monthlyCompound();
+        business.expandCredit();
+        assertEquals(600, business.credit); // month 5
+
+        for (int i = 0; i < 5; i++) business.monthlyCompound();
+        business.expandCredit();
+        assertEquals(700, business.credit); // month 10
+    }
+
+    @Test
+    void bmwExpandsCreditByFiveHundredAfterThreeMonths() {
+        // BMW overrides the credit rules: +$500 every 3 months instead of +$100 every 5
+        BMW bmw = new BMW("Stormfront", 5); // credit = 500
+
+        for (int i = 0; i < 3; i++) bmw.monthlyCompound();
+        bmw.expandCredit();
+
+        assertEquals(1000, bmw.credit); // 500 + 500
     }
 
     @Test

@@ -64,22 +64,25 @@ public class BusinessAccount extends Account implements CompoundGrowth, CreditEx
         // increase the balance by the interest rate
         this.increaseBalance(balance * CompoundGrowth.businessCompoundRate);
 
-        // check if the loyalty bonus will be applied
+        // check if the loyalty bonus will be applied.
+        // numMonthsCompounded is a running total that is never reset, so the
+        // loyalty bonus (every bonusPeriod months) and credit expansion (every
+        // monthsRequired months) can each fire on their own independent cycle.
         this.numMonthsCompounded += 1;
-        if (this.numMonthsCompounded >= this.bonusPeriod){
+        if (this.numMonthsCompounded % this.bonusPeriod == 0){
             this.increaseBalance(CompoundGrowth.bonus);
-            this.numMonthsCompounded = 0;
             System.out.println("Congratulations! Your loyalty has earned you $" + CompoundGrowth.bonus + "!");
         }
     }
 
     @Override
     public void expandCredit() {
-        if (this.numMonthsCompounded >= this.monthsRequired){
+        if (this.numMonthsCompounded > 0 && this.numMonthsCompounded % this.monthsRequired == 0){
             this.credit += this.creditIncrease;
             System.out.println("Congratulations! Your credit is now $" + this.credit + "!");
         } else {
-            System.out.println("You still need to wait " + (this.monthsRequired - this.numMonthsCompounded) + "months before a credit expansion.");
+            int monthsUntilNext = this.monthsRequired - (this.numMonthsCompounded % this.monthsRequired);
+            System.out.println("You still need to wait " + monthsUntilNext + " months before a credit expansion.");
         }
     }
 }
